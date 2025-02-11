@@ -33,8 +33,8 @@ except Exception as e:
 
 # Define allowed node types
 allowed_nodes = [
-    "Person", "Chef", "Organization", "Restaurant", "Planet", "Galaxy","Substances",
-    "Dish", "Ingredient", "Technique", "License", "Sanction", "RegulatoryAuthority"
+    "Person", "Chef", "GastronomicOrder", "Restaurant", "Planet", "Galaxy","Substances",
+    "Dish", "Ingredient", "Technique", "License", "Sanction",
 ]
 
 # Define allowed relationships
@@ -42,8 +42,12 @@ allowed_relationships = [
     "IS_MEMBER_OF", "BELONGS_TO_ORGANIZATION", "LOCATED_IN", "WITHIN_RANGE",
     "SERVES_DISH", "USES_INGREDIENT", "EXCLUDES_INGREDIENT", "USES_TECHNIQUE",
     "EXCLUDES_TECHNIQUE", "IS_PREPARED_BY", "REQUIRES_LICENSE", "HAS_SANCTION",
-    "VIOLATES", "HAS_INTOLERANCE", "IMPOSES_LIMIT", "HAS_LEVEL", "HAS_LICENSE", "WORKS_AT"
+    "VIOLATES", "HAS_INTOLERANCE", "IMPOSES_LIMIT", "HAS_LEVEL", "HAS_LICENSE",
+    "CHEF_OF", "LIMITS_INGREDIENT", "LIMITS_QUANTITY", "REQUIRES_LICENSE_LEVEL",
+    "CERTIFIED_BY", "WITHIN_DISTANCE_OF", "REGULATED_BY", "FOLLOWS_ORDER",
+    "PROHIBITED_BY_ORDER", "USES_MULTIPLE_TECHNIQUES","PLANET_DISTANCE"
 ]
+
 
 # Initialize OpenAI LLM model
 llm = ChatOpenAI(
@@ -68,8 +72,8 @@ if not os.path.exists(database_dir):
 
 # Configure text splitter to handle large files
 text_splitter = RecursiveCharacterTextSplitter(
-    chunk_size=5000,  # Max size of each chunk
-    chunk_overlap=350,  # Overlap to maintain context across chunks
+    chunk_size=1000,  # Max size of each chunk
+    chunk_overlap=250,  # Overlap to maintain context across chunks
 )
 
 # Process all Markdown files in the directory
@@ -98,7 +102,7 @@ for filename in os.listdir(database_dir):
                 graph_docs = lm_transformer_filtered.convert_to_graph_documents([doc])
 
                 # Store extracted graph data into Neo4j
-                graph.add_graph_documents(graph_docs)
+                graph.add_graph_documents(graph_docs, include_source=True)
 
                 logging.info(f"File: {filename}, Chunk {i + 1}/{len(chunk_documents)} processed successfully.")
                 for j, gdoc in enumerate(graph_docs):

@@ -148,7 +148,7 @@ def process_restaurants():
             executor.submit(
                 convert_single_restaurant_to_markdown,
                 restaurant,
-                "Each dish should contain the name and even the ID"
+                "Each dish should contain the name and even the ID, don't use table data"
             ): idx
             for idx, restaurant in enumerate(restaurants)
         }

@@ -1,0 +1,307 @@
+{
+    "ordini_professionali": [
+        {
+            "nome": "Ordine della Galassia di Andromeda",
+            "descrizione": "Gli chef iscritti e operanti nel suddetto Ordine della Galassia di Andromeda sono tenuti a considerare e gestire una peculiare caratteristica fisiologica della propria utenza: tutti gli abitanti di Andromeda manifestano infatti intolleranza al lattosio, ovvero intolleranza a qualsiasi forma nutritiva originaria della Via Lattea."
+        },
+        {
+            "nome": "Ordine dei Naturalisti",
+            "descrizione": "L'Ordine dei Naturalisti venera la purezza originaria del cibo. Il loro credo si basa su un principio semplice: ogni ingrediente ha una sua perfezione innata che deve essere preservata. La regola fondamentale è il 'Principio di Non Alterazione': un ingrediente può essere modificato solo fino al punto in cui mantiene ancora riconoscibile la sua essenza originaria."
+        },
+        {
+            "nome": "Ordine degli Armonisti",
+            "descrizione": "Gli chef iscritti all'Ordine degli Armonisti sono dotati di una rara sensibilità che permette loro di preparare piatti in grado di entrare in sintonia con le frequenze emotive dei loro ospiti. La loro filosofia si basa sul principio che il cibo non nutre solo il corpo, ma deve entrare in risonanza con lo stato emotivo di chi lo consuma."
+        }
+    ],
+    "sostanze_regolamentate": [
+        {
+            "nome": "Erba Pipa",
+            "categoria": "Sostanze Psicotrope e Psioniche",
+            "crp": 0.89,
+            "ipm": null,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": null,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Cristalli di Memoria",
+            "categoria": "Sostanze Psicotrope e Psioniche",
+            "crp": 0.92,
+            "ipm": null,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": 0.2,
+            "mi": null,
+            "cdt": null,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Petali di Eco",
+            "categoria": "Sostanze Psicotrope e Psioniche",
+            "crp": 0.87,
+            "ipm": 0.6,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": null,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Carne di Drago",
+            "categoria": "Ingredienti di Origine Mitica",
+            "crp": null,
+            "ipm": 0.85,
+            "ibx": 0.75,
+            "iei": null,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": null,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Uova di Fenice",
+            "categoria": "Ingredienti di Origine Mitica",
+            "crp": null,
+            "ipm": 0.98,
+            "ibx": null,
+            "iei": 0.8,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": null,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Lacrime di Unicorno",
+            "categoria": "Ingredienti di Origine Mitica",
+            "crp": null,
+            "ipm": 0.95,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": null,
+            "theta": 0.9,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Foglie di Mandragora",
+            "categoria": "Sostanze Xenobiologiche",
+            "crp": null,
+            "ipm": null,
+            "ibx": 0.82,
+            "iei": null,
+            "deltaQ": null,
+            "mi": 0.3,
+            "cdt": null,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "MuNa Lunare",
+            "categoria": "Sostanze Xenobiologiche",
+            "crp": 0.72,
+            "ipm": null,
+            "ibx": 0.78,
+            "iei": null,
+            "deltaQ": null,
+            "mi": 0.6,
+            "cdt": null,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Nettare di Sirena",
+            "categoria": "Sostanze Xenobiologiche",
+            "crp": null,
+            "ipm": null,
+            "ibx": 0.85,
+            "iei": null,
+            "deltaQ": null,
+            "mi": 0.2,
+            "cdt": null,
+            "theta": 0.7,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Spore Quantiche",
+            "categoria": "Sostanze Quantiche e Dimensionali",
+            "crp": null,
+            "ipm": null,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": 0.45,
+            "mi": null,
+            "cdt": 0.8,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Essenza di Vuoto",
+            "categoria": "Sostanze Quantiche e Dimensionali",
+            "crp": null,
+            "ipm": null,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": 0.16,
+            "mi": null,
+            "cdt": 0.95,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Funghi dell’Etere",
+            "categoria": "Sostanze Quantiche e Dimensionali",
+            "crp": null,
+            "ipm": null,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": 0.38,
+            "mi": null,
+            "cdt": 0.75,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Sale Temporale",
+            "categoria": "Sostanze Spazio-Temporali",
+            "crp": null,
+            "ipm": null,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": 0.65,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Radici di Gravità",
+            "categoria": "Sostanze Spazio-Temporali",
+            "crp": null,
+            "ipm": null,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": 0.55,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        },
+        {
+            "nome": "Polvere di Stelle",
+            "categoria": "Sostanze Spazio-Temporali",
+            "crp": null,
+            "ipm": 0.88,
+            "ibx": null,
+            "iei": null,
+            "deltaQ": null,
+            "mi": null,
+            "cdt": 0.75,
+            "theta": null,
+            "limiti": "Limite massimo del 5% in massa o volume rispetto alla preparazione totale."
+        }
+    ],
+    "tecniche_culinarie": [
+        {
+            "nome": "Marinatura",
+            "categoria": "Tecniche di Preparazione",
+            "descrizione": "La marinatura a infusione gravitazionale richiede una licenza gravitazionale (G) di livello II.",
+            "licenze_richieste": [
+                "G II"
+            ],
+            "grado_tecnologico": "LTK II"
+        },
+        {
+            "nome": "A(umicatura",
+            "categoria": "Tecniche di Preparazione",
+            "descrizione": "L'affumicatura a strati catione quantica richiede una licenza quantistica (Q) di livello 3 e un grado tecnologico LTK di livello II.",
+            "licenze_richieste": [
+                "Q III"
+            ],
+            "grado_tecnologico": "LTK II"
+        },
+        {
+            "nome": "Fermentazione",
+            "categoria": "Tecniche di Preparazione",
+            "descrizione": "La fermentazione quantica a strati multiversali richiede una licenza quantistica (Q) di livello 5 e un grado tecnologico LTK di livello VI+.",
+            "licenze_richieste": [
+                "Q V"
+            ],
+            "grado_tecnologico": "LTK VI+"
+        },
+        {
+            "nome": "Decostruzione",
+            "categoria": "Tecniche di Preparazione",
+            "descrizione": "La decostruzione atomica a strati energetici richiede una licenza antimaterica (e+) di livello I, una licenza quantistica (Q) di livello 1 e un grado tecnologico LTK di terzo (II) livello.",
+            "licenze_richieste": [
+                "e+ I",
+                "Q I"
+            ],
+            "grado_tecnologico": "LTK II"
+        },
+        {
+            "nome": "Sfericazione",
+            "categoria": "Tecniche di Preparazione",
+            "descrizione": "La sfericazione a gravità psionica variabile richiede una licenza psionica (P) di livello IV, una licenza gravitazionale (G) di livello I e un grado tecnologico LTK di terzo (III) livello.",
+            "licenze_richieste": [
+                "P IV",
+                "G I"
+            ],
+            "grado_tecnologico": "LTK III"
+        }
+    ],
+    "licenze_disponibili": [
+        {
+            "nome": "Licenza Psionica",
+            "categoria": "Psionica",
+            "livello": 0
+        },
+        {
+            "nome": "Licenza Gravitazionale",
+            "categoria": "Gravitazionale",
+            "livello": 0
+        },
+        {
+            "nome": "Licenza Antimateria",
+            "categoria": "Antimateria",
+            "livello": 0
+        },
+        {
+            "nome": "Licenza Magnetica",
+            "categoria": "Magnetica",
+            "livello": 0
+        },
+        {
+            "nome": "Certificazione di grado tecnologico LTK",
+            "categoria": "Tecnologico",
+            "livello": 1
+        }
+    ],
+    "sanzioni": [
+        {
+            "violazione": "Violazione dei limiti quantitativi stabiliti per le sostanze con risonanza psionica.",
+            "categorie_coinvolte": [
+                "Sostanze Psicotrope e Psioniche"
+            ],
+            "gravita": "Alta",
+            "penalita": "Obbligo di sottoporsi a una valutazione psionica approfondita."
+        },
+        {
+            "violazione": "Falsificazione delle certificazioni dell'Ordine dei Naturalisti.",
+            "categorie_coinvolte": [
+                "Ordine dei Naturalisti"
+            ],
+            "gravita": "Alta",
+            "penalita": "Obbligo di sottoporsi a un percorso di rieducazione sulla filosofia del minimo intervento senziente."
+        }
+    ]
+}

@@ -1,0 +1,152 @@
+[
+    {
+        "planet": "Tatooine",
+        "distances": {
+            "Tatooine": 0,
+            "Asgard": 695,
+            "Namecc": 641,
+            "Arrakis": 109,
+            "Krypton": 661,
+            "Pandora": 1130,
+            "Cybertron": 344,
+            "Ego": 835,
+            "Montressosr": 731,
+            "Klyntar": 530
+        }
+    },
+    {
+        "planet": "Asgard",
+        "distances": {
+            "Tatooine": 695,
+            "Asgard": 0,
+            "Namecc": 550,
+            "Arrakis": 781,
+            "Krypton": 188,
+            "Pandora": 473,
+            "Cybertron": 493,
+            "Ego": 156,
+            "Montressosr": 240,
+            "Klyntar": 479
+        }
+    },
+    {
+        "planet": "Namecc",
+        "distances": {
+            "Tatooine": 641,
+            "Asgard": 550,
+            "Namecc": 0,
+            "Arrakis": 651,
+            "Krypton": 367,
+            "Pandora": 987,
+            "Cybertron": 728,
+            "Ego": 688,
+            "Montressosr": 767,
+            "Klyntar": 845
+        }
+    },
+    {
+        "planet": "Arrakis",
+        "distances": {
+            "Tatooine": 109,
+            "Asgard": 781,
+            "Namecc": 651,
+            "Arrakis": 0,
+            "Krypton": 727,
+            "Pandora": 1227,
+            "Cybertron": 454,
+            "Ego": 926,
+            "Montressosr": 834,
+            "Klyntar": 640
+        }
+    },
+    {
+        "planet": "Krypton",
+        "distances": {
+            "Tatooine": 661,
+            "Asgard": 188,
+            "Namecc": 367,
+            "Arrakis": 727,
+            "Krypton": 0,
+            "Pandora": 626,
+            "Cybertron": 557,
+            "Ego": 321,
+            "Montressosr": 422,
+            "Klyntar": 599
+        }
+    },
+    {
+        "planet": "Pandora",
+        "distances": {
+            "Tatooine": 1130,
+            "Asgard": 473,
+            "Namecc": 987,
+            "Arrakis": 1227,
+            "Krypton": 626,
+            "Pandora": 0,
+            "Cybertron": 847,
+            "Ego": 317,
+            "Montressosr": 413,
+            "Klyntar": 731
+        }
+    },
+    {
+        "planet": "Cybertron",
+        "distances": {
+            "Tatooine": 344,
+            "Asgard": 493,
+            "Namecc": 728,
+            "Arrakis": 454,
+            "Krypton": 557,
+            "Pandora": 847,
+            "Cybertron": 0,
+            "Ego": 594,
+            "Montressosr": 434,
+            "Klyntar": 186
+        }
+    },
+    {
+        "planet": "Ego",
+        "distances": {
+            "Tatooine": 835,
+            "Asgard": 156,
+            "Namecc": 688,
+            "Arrakis": 926,
+            "Krypton": 321,
+            "Pandora": 317,
+            "Cybertron": 594,
+            "Ego": 0,
+            "Montressosr": 215,
+            "Klyntar": 532
+        }
+    },
+    {
+        "planet": "Montressosr",
+        "distances": {
+            "Tatooine": 731,
+            "Asgard": 240,
+            "Namecc": 767,
+            "Arrakis": 834,
+            "Krypton": 422,
+            "Pandora": 413,
+            "Cybertron": 434,
+            "Ego": 215,
+            "Montressosr": 0,
+            "Klyntar": 331
+        }
+    },
+    {
+        "planet": "Klyntar",
+        "distances": {
+            "Tatooine": 530,
+            "Asgard": 479,
+            "Namecc": 845,
+            "Arrakis": 640,
+            "Krypton": 599,
+            "Pandora": 731,
+            "Cybertron": 186,
+            "Ego": 532,
+            "Montressosr": 331,
+            "Klyntar": 0
+        }
+    }
+]
