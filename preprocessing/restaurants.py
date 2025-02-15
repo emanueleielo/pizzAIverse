@@ -10,14 +10,14 @@ MENU_DIR = os.path.join(os.path.dirname(PROJECT_PATH), "Hackapizza Dataset/Menu"
 OUTPUT_JSON = os.path.join(os.path.dirname(PROJECT_PATH), "database/restaurants.json")
 OUTPUT_MARKDOWN = os.path.join(os.path.dirname(PROJECT_PATH), "database/restaurants.md")
 
-MAX_THREADS = 5
+MAX_THREADS = 6
 
 
 def extract_restaurant_info(menu_path: str) -> Ristorante:
     """
     Extract restaurant information from a menu PDF file.
     """
-    model = get_model()
+    model = get_model(model='gpt-4o')
     menu_str: str = read_pdf_text(menu_path)
     llm = model.with_structured_output(Ristorante)
     restaurant: Ristorante = llm.invoke(
@@ -85,23 +85,41 @@ def convert_single_restaurant_to_markdown(restaurant, prompt_adding: str = "") -
     ```json
     {json.dumps(data, indent=4)}
     ```
+    IMPORTANT = Every dish must  contain the Chef's name and the Planet of the restaurant (before of the ingredienti and below descrizione).
+    ORDER INFOS:
+    ## Ordine della Galassia di Andromeda
+- **Descrizione**: Intolleranti al lattosio quindi evitate latticini e derivat (latte, burro, panna, formaggi o ingredienti della Via Lattea). Posso mangiare tutti i piatti che non contengono lattosio
 
-    The Markdown should be:
-    - **Concise but readable**
-    - **Formatted with headings, lists, and sections**
-    - **Avoid unnecessary repetition**
-    - **Maintain structured data representation**
+## Ordine dei Naturalisti
+- **Descrizione**: Tutti i piatti che non utilizzano Tecniche.
+
+## Ordine degli Armonisti
+- **Descrizione**: Gli chef sono dotati di una rara sensibilità che permette loro di preparare piatti in grado di entrare in sintonia con le frequenze emotive dei loro ospiti. La filosofia si basa sul principio che il cibo deve entrare in risonanza con lo stato emotivo di chi lo consuma.
+
+    Example of dish:
+    ### NAME
+- **Ristorante:** ...
+- **Ordine:** (you must guess this information based on the text below, it can be more than 1 order divided by a comma) Armonisti/Naturalisti/Galassia di Andromeda | Example: Armonisti, Naturalisti
+- **Descrizione:** ...
+- **Chef:** ...
+- **Pianeta:** ...
+- **Ingredienti:**
+...
+- **Tecniche:**
+...
+
     {prompt_adding}
 
     Output only the Markdown content.
     """
 
     # Call your model
-    model = get_model()
+    model =get_model(model='gpt-4o')
     response = model.invoke(prompt)
 
     # Return the Markdown text
     # (some LLMs return a .content attribute, others might just return a string)
+    print(response.content.strip())
     return response.content.strip()
 
 
@@ -148,7 +166,7 @@ def process_restaurants():
             executor.submit(
                 convert_single_restaurant_to_markdown,
                 restaurant,
-                "Each dish should contain the name and even the ID, don't use table data"
+                "Each dish should contain the name and even the ID, don't use table data \n"
             ): idx
             for idx, restaurant in enumerate(restaurants)
         }

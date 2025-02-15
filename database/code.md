@@ -100,28 +100,28 @@
 ## Tecniche di Preparazione
 - **Marinatura**
   - Descrizione: La marinatura a infusione gravitazionale richiede una licenza gravitazionale (G) di livello II.
-  - Licenze richieste: G II
-  - Grado tecnologico: LTK II
+  - Licenze richieste: Gravitazionale 2
+  - Grado tecnologico: LTK 2
 
 - **Affumicatura**
   - Descrizione: L'affumicatura a strati catione quantica richiede una licenza quantistica (Q) di livello 3 e un grado tecnologico LTK di livello II.
-  - Licenze richieste: Q III
-  - Grado tecnologico: LTK II
+  - Licenze richieste: Quantistica 3
+  - Grado tecnologico: LTK 2
 
 - **Fermentazione**
   - Descrizione: La fermentazione quantica a strati multiversali richiede una licenza quantistica (Q) di livello 5 e un grado tecnologico LTK di livello VI+.
-  - Licenze richieste: Q V
-  - Grado tecnologico: LTK VI+
+  - Licenze richieste: Quantistica 5
+  - Grado tecnologico: LTK 6
 
 - **Decostruzione**
   - Descrizione: La decostruzione atomica a strati energetici richiede una licenza antimaterica (e+) di livello I, una licenza quantistica (Q) di livello 1 e un grado tecnologico LTK di terzo (II) livello.
-  - Licenze richieste: e+ I, Q I
-  - Grado tecnologico: LTK II
+  - Licenze richieste: Antimateria 1, Quantistica 1
+  - Grado tecnologico: LTK 2
 
 - **Sfericazione**
   - Descrizione: La sfericazione a gravità psionica variabile richiede una licenza psionica (P) di livello IV, una licenza gravitazionale (G) di livello I e un grado tecnologico LTK di terzo (III) livello.
-  - Licenze richieste: P IV, G I
-  - Grado tecnologico: LTK III
+  - Licenze richieste: Psionica 4, Gravitazionale 1
+  - Grado tecnologico: LTK 3
 
 ---
 
