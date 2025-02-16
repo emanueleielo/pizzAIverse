@@ -14,12 +14,11 @@ def search_dishes(
         all_of_techniques: list = None,
         any_of_techniques: list = None,
         exclude_techniques: list = None,
-        license_uid: str = None,
-        min_license_grade: int = 0,
         order_uid: str = None,
         restaurant_uid: str = None,
         planet_uid: str = None,
         max_distance: int = None,
+        planet_uid_max_distance_included: bool = True,
         min_count_ingredients_from_list: list = None,
         min_count: int = 0):
     """
@@ -32,8 +31,6 @@ def search_dishes(
         all_of_techniques (list): Dishs must use all these techniques
         any_of_techniques (list): Dishs must use at least one of these techniques
         exclude_techniques (list): Exclude dishes using these techniques
-        license_uid (str): Filter by chef license
-        min_license_grade (int): Min license grade
         order_uid (str): Filter by order association
         restaurant_uid (str): Filter by restaurant
         planet_uid (str): Filter by planet or within max_distance
@@ -52,12 +49,13 @@ def search_dishes(
         all_of_techniques=all_of_techniques,
         any_of_techniques=any_of_techniques,
         exclude_techniques=exclude_techniques,
-        license_uid=license_uid,
-        min_license_grade=min_license_grade,
+        license_uid=None,
+        min_license_grade=None,
         order_uid=order_uid,
         restaurant_uid=restaurant_uid,
         planet_uid=planet_uid,
         max_distance=max_distance,
+        planet_uid_max_distance_included=planet_uid_max_distance_included,
         min_count_ingredients_from_list=min_count_ingredients_from_list,
         min_count=min_count
     )

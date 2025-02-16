@@ -395,33 +395,65 @@ class DishRepository:
         return {row[0] for row in results}
 
     @staticmethod
-    def _by_restaurant_distance(planet_uid: str, max_distance: int) -> set:
+    def _by_planet(planet_uid: str) -> set:
         """
-        Retrieves dish IDs served in restaurants located within 'max_distance' from a specified planet.
+        Retrieves dish IDs served at a specific planet (exact match).
 
         Args:
-            planet_uid (str): The UID of the reference planet.
-            max_distance (int): The maximum distance to match restaurants.
+            planet_uid (str): The UID of the planet to match exactly.
 
         Returns:
-            set: A set of dish IDs served by restaurants within the given distance from the planet.
+            set: A set of dish IDs served at the specified planet.
+        """
+        if not planet_uid:
+            return set()
+
+        planet_query = planet_uid
+        query = """
+        CALL db.index.fulltext.queryNodes("planet_fulltext", $planet_query) YIELD node AS planet
+        MATCH (d:Dish)-[:DISH_AVAILABLE_ON_PLANET]->(planet)
+        RETURN d.id
+        """
+        results, _ = db.cypher_query(query, {"planet_query": planet_query})
+        return {row[0] for row in results}
+
+    @staticmethod
+    def _by_restaurant_distance(planet_uid: str, max_distance: int, include_planet: bool = False) -> set:
+        """
+        Retrieves dish IDs available on planets within 'max_distance'
+        from a specified planet. If 'include_planet' is True, it also
+        fetches dishes available on the planet itself (distance = 0).
+
+        We use the :DISH_AVAILABLE_ON_PLANET relationship instead of
+        relying on restaurants.
         """
         if not planet_uid or max_distance is None:
             return set()
 
-        query = """
-        MATCH (p:Planet {id: $planet_uid})-[:DISTANCE_TO]-(otherPlanet:Planet)
-        WHERE EXISTS { 
-            MATCH (p)-[d:DISTANCE_TO]->(otherPlanet) WHERE d.distance <= $max_distance
-        }
-        MATCH (r:Restaurant)-[:LOCATED_ON_PLANET]->(otherPlanet)
-        MATCH (d:Dish)-[:DISH_SERVED_AT_RESTAURANT]->(r)
+        final_results = set()
+
+        # --- Query #1: Include the planet itself if requested ---
+        if include_planet:
+            same_planet_query = """
+            MATCH (p:Planet {id: $planet_uid})
+            MATCH (d:Dish)-[:DISH_AVAILABLE_ON_PLANET]->(p)
+            RETURN DISTINCT d.id
+            """
+            res_same_planet, _ = db.cypher_query(same_planet_query, {"planet_uid": planet_uid})
+            final_results |= {row[0] for row in res_same_planet}  # union assignment
+
+        # --- Query #2: Dishes on other planets within max_distance ---
+        distance_query = """
+        MATCH (p:Planet {id: $planet_uid})-[dist:DISTANCE_TO]->(otherPlanet:Planet)
+        WHERE dist.distance <= $max_distance
+        MATCH (d:Dish)-[:DISH_AVAILABLE_ON_PLANET]->(otherPlanet)
         RETURN DISTINCT d.id
         """
-
         params = {"planet_uid": planet_uid, "max_distance": max_distance}
-        results, _ = db.cypher_query(query, params)
-        return {row[0] for row in results}
+        res_distance, _ = db.cypher_query(distance_query, params)
+        final_results |= {row[0] for row in res_distance}
+
+        return final_results
 
     @staticmethod
     def _all_dishes() -> set:
@@ -456,6 +488,32 @@ class DishRepository:
         results, _ = db.cypher_query(query, {"name": name})
         return [row[0] for row in results]
 
+
+    @staticmethod
+    def _any_of_techniques(technique_uids: list) -> set:
+        """
+        Retrieves dish IDs that use at least one of the provided techniques (OR logic).
+        Uses fuzzy matching for each technique token (e.g., 'Marinatura~1').
+        """
+        if not technique_uids:
+            return set()
+
+        fuzzy_queries = []
+        for uid in technique_uids:
+            tokens = uid.split()
+            fuzzy_tokens = [f"{t}~1" for t in tokens]
+            fuzzy_queries.append(" ".join(fuzzy_tokens))
+
+        query = """
+        UNWIND $fuzzy_queries AS fq
+        CALL db.index.fulltext.queryNodes("technique_fulltext", fq) YIELD node AS technique, score
+        WHERE score > 2
+        MATCH (d:Dish)-[:DISH_USES_TECHNIQUE]->(technique)
+        RETURN DISTINCT d.id
+        """
+        results, _ = db.cypher_query(query, {"fuzzy_queries": fuzzy_queries})
+        return {row[0] for row in results}
+
     @staticmethod
     def search_dishes(
         all_of_ingredients: list = None,
@@ -469,6 +527,7 @@ class DishRepository:
         order_uid: str = None,
         restaurant_uid: str = None,
         planet_uid: str = None,
+        planet_uid_max_distance_included: bool = True,
         max_distance: int = None,
         min_count_ingredients_from_list: list = None,
         min_count: int = 0
@@ -488,6 +547,7 @@ class DishRepository:
             order_uid (str): Dishes must belong or be associated to this order (exact match).
             restaurant_uid (str): Dishes must be served at this specific restaurant (exact match).
             planet_uid (str): Dishes must be served in restaurants on this planet (or within distance).
+            planet_uid_max_distance_included (bool): If True, the 'planet_uid' is included in the max_distance check.
             max_distance (int): The maximum distance from the planet for restaurants serving these dishes.
             min_count_ingredients_from_list (list): Fuzzy ingredients from which a dish must contain at least 'min_count'.
             min_count (int): Required count of matched ingredients from 'min_count_ingredients_from_list'.
@@ -522,9 +582,12 @@ class DishRepository:
         if restaurant_uid:
             positive_sets.append(DishRepository._by_restaurant(restaurant_uid))
 
+        if planet_uid is not None:
+            positive_sets.append(DishRepository._by_planet(planet_uid))
+
         # 6) DISTANCE
         if planet_uid is not None and max_distance is not None:
-            positive_sets.append(DishRepository._by_restaurant_distance(planet_uid, max_distance))
+            positive_sets.append(DishRepository._by_restaurant_distance(planet_uid, max_distance, planet_uid_max_distance_included))
 
         # Intersect all positive sets if any, else retrieve all dishes.
         if not positive_sets:
@@ -578,3 +641,8 @@ class DishRepository:
         """
         results, _ = db.cypher_query(final_query, {"uids": list(current_uids)})
         return [Dish.inflate(row[0]) for row in results]
+
+
+
+dishes = DishRepository.search_dishes(all_of_ingredients=["Petali di Eco", "Foglie di mandragora"])
+print(dishes)

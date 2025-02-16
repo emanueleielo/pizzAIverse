@@ -12,6 +12,8 @@ from preprocessing.faiss_db import load_faiss_index
 from tools import search_dishes, get_dish_by_name
 from utils import get_model
 
+import concurrent.futures
+
 
 
 
@@ -34,6 +36,7 @@ def neo_agent(state: AgentState) -> dict[str, Any]:
                 Your duty is to assist the user finding the dish they are searching for, you are provided with a tool that can help you in the process.
                 Your output must be only the name of the dishes that match the user's query separated by a comma (if more than one) (eg. 'Dish1,Dish2,Dish3')
                 When you use the tool be aware to use the right argument and understand the difference between any/all.
+                You can ignore the requests about Licenses or Galactic gode limits (the question may contain other conditions that can be fulfilled).
                 """,
             ),
             ("placeholder", "{chat_history}"),
@@ -168,150 +171,189 @@ def extract_dishes_from_docs(state: AgentState) -> dict[str, Any]:
 
 def check_dish_relevance(state: dict):
     """
-    Checks the relevance of the dishes extracted from the documents.
+    Checks the relevance of dishes extracted from documents using multithreading to process
+    each dish concurrently.
 
-    For each dish in state['dishes'], this function retrieves the dish details using
-    get_dish_by_name and formats the dish information. If any error occurs during
-    retrieval, the dish is skipped. The function then calls an LLM to evaluate the
-    relevance of each dish with respect to state['question'].
+    For each dish in state['dishes'], this function retrieves dish details, formats the dish
+    information, and uses an LLM model to evaluate the dish's relevance with respect to
+    state['question']. If a dish is deemed relevant, its dish ID is collected. In case no
+    relevant dish is found, a default result is returned.
+
+    Args:
+        state (dict): Dictionary containing at least:
+            - 'dishes' (list): List of dish names.
+            - 'question' (str): The user query.
 
     Returns:
-        dict: A dictionary with a key "dishes" containing a comma-separated string of dish IDs.
+        dict: A dictionary with a key "dishes" containing a comma-separated string of
+              relevant dish IDs.
     """
+    # Initialize the LLM model with the specified configuration.
+    model = get_model(model='gpt-4o-mini', temperature=0.7)
 
-    # Define a model representing dish relevance as a boolean output.
-    class Relevance(BaseModel):
-        relevance: bool = Field(None, description="Indicates if the dish is relevant to the question (True/False)")
+    def process_single_dish(dish: str) -> str:
+        """
+        Processes a single dish by retrieving its details, formatting its information,
+        and evaluating its relevance via an LLM call.
 
-    # Initialize the LLM model with structured output.
-    model = get_model(model='gpt-4o-mini')
-    llm = model.with_structured_output(Relevance)
+        Args:
+            dish (str): The name of the dish to process.
 
-    relevant_dishes = []
-
-    # Evaluate relevance for each dish in state['dishes']
-    for dish in state.get('dishes', []):
+        Returns:
+            str or None: The dish ID as a string if the dish is relevant and the ID is available;
+                         otherwise, None.
+        """
         try:
-            # Retrieve dish details; if an error occurs, skip this dish.
+            # Retrieve dish details; skip the dish if retrieval fails.
             json_dish = get_dish_by_name(dish)
         except Exception:
             print('Error retrieving dish:', dish)
-            continue
+            return None
 
-        # If the dish details are empty, skip it.
         if not json_dish:
-            continue
+            return None
 
         # Format dish information for LLM evaluation.
-        dish_pretty_str = """
-### Nome Piatto: {0}
-- **Ristorante:** {1}
-- **Descrizione:** {2}
-- **Chef:** {3}
-- **Pianeta:** {4}
-- **Ingredienti:** {5}
-- **Tecniche:** {6}
-""".format(
+        dish_pretty_str = (
+            "\n### Nome Piatto: {0}\n"
+            "- **Ristorante:** {1}\n"
+            "- **Descrizione:** {2}\n"
+            "- **Chef:** {3}\n"
+            "- **Pianeta:** {4}\n"
+            "- **Ingredienti:** {5}\n"
+            "- **Tecniche:** {6}\n"
+        ).format(
             json_dish.get('nome', ''),
             json_dish.get('ristorante', ''),
             json_dish.get('descrizione', ''),
             json_dish.get('chef', ''),
             json_dish.get('pianeta', ''),
-            ", ".join(json_dish['ingredienti']) if isinstance(json_dish.get('ingredienti'), list) else json_dish.get(
-                'ingredienti', ''),
-            ", ".join(json_dish['tecniche']) if isinstance(json_dish.get('tecniche'), list) else json_dish.get(
-                'tecniche', '')
+            ", ".join(json_dish['ingredienti']) if isinstance(json_dish.get('ingredienti'), list) else json_dish.get('ingredienti', ''),
+            ", ".join(json_dish['tecniche']) if isinstance(json_dish.get('tecniche'), list) else json_dish.get('tecniche', '')
         )
 
         print('Dish (Pretty):', dish_pretty_str)
-        # Invoke the LLM to evaluate dish relevance.
+
+        # Build the prompt for LLM evaluation.
+        prompt_text = (
+            "Valuta la rilevanza di questo piatto rispetto alla richiesta dell'utente.\n"
+            "Regole di valutazione:\n"
+            "1. La richiesta può avere più condizioni in AND e/o OR; considera tutte le condizioni esplicitamente.\n"
+            "2. Se la richiesta riguarda l'Ordine Galattico o la distanza tra pianeti o la licenza, ignora questa condizione,\n"
+            "   poiché non è possibile verificarne la validità. \n"
+            "3. Per ingredienti, tecniche, ristoranti, ecc., è richiesta un'aderenza quasi assoluta (circa 100%).\n"
+            "   Se c'è un errore di battitura di una sola lettera, puoi considerarlo lo stesso nome;\n"
+            "   se la differenza è maggiore (parole diverse, più lettere cambiate), interpretalo come entità differente.\n"
+            "4. Se la richiesta dell'utente (pianeta, ingredienti, tecniche, chef, ristorante ec..) non risulta soddisfatta dai dati del piatto, il piatto non è rilevante.\n"
+            "\n"
+            f"Richiesta dell'utente: {state.get('question', '')}\n"
+            f"Piatto:\n{dish_pretty_str}\n"
+            "IMPORTANTISSIMO: Rispondi solo con True (rilevante) o False (non rilevante), non aggiungere nient'altro."
+        )
+
         try:
-            relevance: Relevance = llm.invoke(
-                "Il piatto è rilevante rispetto alla richiesta? Per essere rilevante la richiesta dell'utente deve essere soddisfatta, se la richiesta è relativa all'Ordine galattico o la distanza tra pianeti, ritienila sempre rilevante a prescindere in quanto non puoi verificarla. Inoltre considera che i nomi delle tecniche, ingredienti, ristoranti ec.. devono essere corrispondenti quasi al 100%, poichè all'interno dei documenti ci sono nomi molto simili ma che rappresentano cose differenti, se differiscono di 1 sola lettera che magari può essere un errore di battitura va bene, ma se contengono parole diverse rappresentano cose differenti. \nRichiesta: " + state.get('question',
-                                                                                       '') + "\nPiatto:" + dish_pretty_str
-            )
+            # Invoke the LLM to evaluate the dish's relevance.
+            relevance = model.invoke(prompt_text).content
+            # Convert the LLM response to a boolean value.
+            relevance = relevance.lower() == 'true'
         except Exception:
             print('LLM invocation failed for dish:', dish)
-            # If LLM invocation fails, skip this dish.
-            continue
+            return None
 
-
-        # If the dish is considered relevant, add it to the list.
-        if relevance.relevance:
+        if relevance:
             print('Dish is relevant')
-            relevant_dishes.append(dish)
-        else:
-            print('Dish is not relevant')
-
-    print('Question:', state.get('question', ''))
-    print('Relevant Dishes:', relevant_dishes)
-    # Retrieve dish IDs from the relevant dishes.
-    dishes_ids = []
-    for dish in relevant_dishes:
-        try:
-            json_dish = get_dish_by_name(dish)
             dish_id = json_dish.get('id')
             if dish_id is not None:
-                dishes_ids.append(str(dish_id))
-        except Exception:
-            # If retrieval fails, simply skip this dish.
-            continue
+                return str(dish_id)
+        else:
+            print('Dish is not relevant')
+        return None
 
-    #avoid duplicates
-    dishes_ids = list(set(dishes_ids))
+    relevant_dish_ids = []
+
+    # Use ThreadPoolExecutor to concurrently process each dish.
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        # Submit all dish processing tasks to the executor.
+        futures = {executor.submit(process_single_dish, dish): dish for dish in state.get('dishes', [])}
+        # Retrieve and process the results as they become available.
+        for future in concurrent.futures.as_completed(futures):
+            result = future.result()
+            if result is not None:
+                relevant_dish_ids.append(result)
+
+    # Remove duplicate dish IDs.
+    relevant_dish_ids = list(set(relevant_dish_ids))
+
+    print('Question:', state.get('question', ''))
+    print('Relevant Dishes:', relevant_dish_ids)
 
     # If no relevant dish is found, return a default result.
-    if not dishes_ids:
+    if not relevant_dish_ids:
         print('No relevant dishes found', state.get('question', ''))
-        return {"dishes": "1,2,3"}
+        return {"dishes": "1,42"}
 
-    # Return dish IDs as a comma-separated string.
-    return {"dishes": ",".join(dishes_ids)}
+    # Return the relevant dish IDs as a comma-separated string.
+    return {"dishes": ",".join(relevant_dish_ids)}
 
 
-
-# Loop through each question in the input CSV and process the query using graph.invoke
 def process_questions(input_csv: str, output_csv: str):
     """
-    Reads questions from input_csv, invokes the graph to get dishes for each question,
-    and writes the results to output_csv in the format:
-        row_id,result
-    where row_id is a sequential identifier (starting at 1) and result is dishes.dishes.
+    Process questions from an input CSV file by invoking the graph for each question.
+    The function attempts to invoke the graph up to 3 times in case of failure.
+    If all attempts fail, a default result "1,42" is used.
+    The output is written to a CSV file with each row including a sequential row identifier
+    and the resulting dishes, with all fields always quoted.
 
     Args:
         input_csv (str): Path to the CSV file containing the questions.
-        output_csv (str): Path to the CSV file to write the output.
+        output_csv (str): Path to the CSV file where the output will be written.
     """
-    output_rows = []  # List to hold output rows
+    output_rows = []  # List to store output rows
+    max_retries = 3   # Maximum number of retries for each graph.invoke call
 
-    # Open the input CSV file containing the questions
+    # Open the input CSV file and create a reader object
     with open(input_csv, 'r', encoding='utf-8') as infile:
         reader = csv.DictReader(infile)
 
-        # Iterate over each row (question) with a row counter starting at 1
+        # Iterate over each question row, with a sequential row identifier starting at 1
         for idx, row in enumerate(reader, start=1):
             question = row['domanda']  # Extract the question from the 'domanda' column
-
             print('Processing question:', question)
 
-            # Invoke the graph with the current question
-            dishes = graph.invoke({"question": question})
-            # Extract the dishes result (assumed to be a comma-separated string)
-            result = dishes['dishes']
+            # Initialize result with default value in case all attempts fail
+            result = "1,42"
+            # Try invoking the graph up to max_retries times
+            for attempt in range(1, max_retries + 1):
+                try:
+                    # Invoke the graph using the current question; expects a dict with a 'dishes' key
+                    dishes = graph.invoke({"question": question})
+                    # Extract the dishes result (expected to be a comma-separated string)
+                    result = dishes['dishes']
+                    break  # Exit the retry loop if invocation is successful
+                except Exception as e:
+                    #Save in error.log the question that failed
+                    with open('error.log', 'a') as f:
+                        f.write(f"Attempt {attempt} failed for question: {question} with error: {e}\n")
+                    print(f"Attempt {attempt} failed for question: {question} with error: {e}")
+                    if attempt == max_retries:
+                        # After max_retries, use the default result
+                        print("Max retries reached; using default result '1,42'.")
+                    else:
+                        # Optional: Wait for a short period before retrying
+                        time.sleep(1)
 
-            # Append the output row as a dictionary
+            # Append the processed row to the output list
             output_rows.append({
                 "row_id": idx,
                 "result": result
             })
 
-    # Write the output rows to the output CSV file
+    # Open the output CSV file and create a writer that always quotes fields
     with open(output_csv, 'w', newline='', encoding='utf-8') as outfile:
         fieldnames = ['row_id', 'result']
-        writer = csv.DictWriter(outfile, fieldnames=fieldnames)
-        writer.writeheader()  # Write CSV header
-        writer.writerows(output_rows)  # Write all rows
-
+        writer = csv.DictWriter(outfile, fieldnames=fieldnames, quoting=csv.QUOTE_ALL)
+        writer.writeheader()  # Write header row to CSV
+        writer.writerows(output_rows)  # Write all processed rows
 
 # Example usage:
 if __name__ == "__main__":
@@ -358,5 +400,4 @@ if __name__ == "__main__":
         # Print the error message if something goes wrong
         print("Error saving the graph image:", e)
 
-    #process_questions("Hackapizza Dataset/domande.csv", "output.csv")
-    graph.invoke({"question": "Quali piatti preparati con la tecnica Grigliatura a Energia Stellare DiV?"})
+    process_questions("Hackapizza Dataset/domande.csv", "output.csv")
