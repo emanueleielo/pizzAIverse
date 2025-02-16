@@ -281,43 +281,11 @@ class DishRepository:
         return {row[0] for row in results}
 
     @staticmethod
-    def _any_of_techniques(technique_uids: list) -> set:
-        """
-        Retrieves dish IDs that use at least one of the provided techniques (OR logic),
-        using fuzzy matching on each token.
-
-        Args:
-            technique_uids (list): A list of technique strings to be searched with fuzzy logic.
-
-        Returns:
-            set: A set of dish IDs that use at least one of the specified techniques.
-        """
-        if not technique_uids:
-            return set()
-
-        fuzzy_queries = []
-        for uid in technique_uids:
-            tokens = uid.split()
-            fuzzy_tokens = [f"{t}~1" for t in tokens]
-            fuzzy_query = " ".join(fuzzy_tokens)
-            fuzzy_queries.append(fuzzy_query)
-
-        query = """
-        UNWIND $fuzzy_queries AS fq
-        CALL db.index.fulltext.queryNodes("technique_fulltext", fq) YIELD node AS technique,score
-        WITH technique, score
-        WHERE score > 2
-        MATCH (d:Dish)-[:DISH_USES_TECHNIQUE]->(technique)
-        RETURN DISTINCT d.id
-        """
-        results, _ = db.cypher_query(query, {"fuzzy_queries": fuzzy_queries})
-        return {row[0] for row in results}
-
-    @staticmethod
     def _all_of_techniques(technique_uids: list) -> set:
         """
-        Retrieves dish IDs that use ALL of the provided techniques (AND logic),
-        using fuzzy matching on each token.
+        Retrieves dish IDs that use ALL of the provided techniques (AND logic)
+        by executing a fuzzy matching query for each technique separately and
+        then computing the intersection of the resulting dish IDs.
 
         Args:
             technique_uids (list): A list of technique strings to be matched collectively (AND).
@@ -328,40 +296,30 @@ class DishRepository:
         if not technique_uids:
             return set()
 
-        # Build fuzzy queries for each technique UID
-        fuzzy_queries = []
+        all_ids = None  # This will hold the intersection of dish IDs for each technique
+
         for uid in technique_uids:
+            # Split the technique string into tokens and build a fuzzy query for each token
             tokens = uid.split()
-            # ~1 is a common fuzzy distance; increase if you need looser matching
             fuzzy_tokens = [f"{t}~1" for t in tokens]
             fuzzy_query = " ".join(fuzzy_tokens)
-            fuzzy_queries.append(fuzzy_query)
 
-        # This query:
-        # 1) Loops over each fuzzy query
-        # 2) Collects all Technique nodes that match with a sufficient score
-        # 3) Aggregates them into a list of sets
-        # 4) Requires that each Dish uses at least one Technique node from each set
-        query = """
-        UNWIND $fuzzy_queries AS fq
-        CALL db.index.fulltext.queryNodes("technique_fulltext", fq) YIELD node AS t, score
-        // Optional threshold; adjust to suit your data
-        WHERE score > 8
-        WITH fq, COLLECT(t) AS matchedTechs
+            query = """
+            CALL db.index.fulltext.queryNodes("technique_fulltext", $fuzzy_query) YIELD node AS technique, score
+            WHERE score > 2
+            MATCH (d:Dish)-[:DISH_USES_TECHNIQUE]->(technique)
+            RETURN DISTINCT d.id AS id
+            """
+            results, _ = db.cypher_query(query, {"fuzzy_query": fuzzy_query})
+            current_ids = {row[0] for row in results}
 
-        // Now we have one set of matchedTechs per fuzzy query
-        WITH COLLECT(matchedTechs) AS listOfSets
+            # If it's the first technique, initialize all_ids; otherwise, intersect
+            if all_ids is None:
+                all_ids = current_ids
+            else:
+                all_ids = all_ids.intersection(current_ids)
 
-        MATCH (d:Dish)
-        // For each set in listOfSets, ensure the Dish has at least one Technique from that set
-        WHERE ALL(techSet IN listOfSets
-                  WHERE ANY(t IN techSet
-                            WHERE (d)-[:DISH_USES_TECHNIQUE]->(t)))
-        RETURN d.id
-        """
-
-        results, _ = db.cypher_query(query, {"fuzzy_queries": fuzzy_queries})
-        return {row[0] for row in results}
+        return all_ids if all_ids is not None else set()
 
     @staticmethod
     def _by_chef_license(license_uid: str, min_grade: int = 0) -> set:

@@ -1,3 +1,4 @@
+import difflib
 import json
 
 from langchain.tools import tool
@@ -78,42 +79,86 @@ def get_dish_by_name(name: str) -> list:
 
 def get_dish_by_name(dish_name: str) -> dict:
     """
-    Searches for a dish by name across restaurant menus and returns the dish's details with its ID.
+    Searches for a dish by name across restaurant menus and returns the dish's details with its ID,
+    along with the restaurant name, chef, and planet.
 
-    This function iterates over each restaurant and its menu to find a dish whose name matches
-    the provided dish_name (case-insensitive). It then merges the dish data with the corresponding
-    dish ID from the dish_ids dictionary.
+    The function first attempts a case-insensitive exact match. If none is found, it collects all
+    dish names from the menus and uses difflib.get_close_matches to find the closest match based on
+    a similarity cutoff.
+
+    Additionally, it transforms the 'ingredienti' and 'tecniche' fields to lists of strings (only their names).
 
     Args:
         dish_name (str): The name of the dish to search for.
-        dish_ids (dict): A mapping of dish names to their IDs.
-        restaurants (list): A list of restaurant JSON objects that include menu data.
 
     Returns:
-        dict: The JSON data of the dish including its ID, or an empty dictionary if not found.
+        dict: A dictionary containing the dish's details, its ID, restaurant name, chef, and planet,
+              with 'ingredienti' and 'tecniche' as lists of names, or an empty dictionary if not found.
     """
-    #read json 'restaurants.json'
-    with open('./database/restaurants.json') as f:
+    # Read JSON 'restaurants.json'
+    with open('./database/restaurants.json', encoding='utf-8') as f:
         restaurants = json.load(f)
 
-    #read json 'dish_mapping.json'
-    with open('./database/dish_mapping.json') as f:
+    # Read JSON 'dish_mapping.json'
+    with open('./database/dish_mapping.json', encoding='utf-8') as f:
         dish_ids = json.load(f)
-    # Iterate over each restaurant in the provided list
-    for restaurant in restaurants:
-        # Retrieve the menu from the current restaurant; default to an empty list if not present
-        menu = restaurant.get("menu", [])
-        # Iterate over each dish in the restaurant's menu
-        for dish in menu:
-            # Check for a case-insensitive match for the dish name
-            if dish.get("nome", "").lower() == dish_name.lower():
-                # Retrieve the dish ID from dish_ids if available
-                dish_id = dish_ids.get(dish_name)
-                # Create a copy of the dish data to avoid modifying the original JSON
-                dish_data = dish.copy()
-                # Add the dish ID to the dish data
-                dish_data["id"] = dish_id
-                return dish_data
-    # If the dish is not found in any restaurant's menu, return an empty dictionary
-    return {}
 
+    # Helper function to extract only the 'nome' field from a list of dicts
+    def extract_names(items, key="nome"):
+        return [item.get(key, "") for item in items if isinstance(item, dict)]
+
+    # Attempt an exact case-insensitive match first
+    for restaurant in restaurants:
+        menu = restaurant.get("menu", [])
+        for dish in menu:
+            if dish.get("nome", "").lower() == dish_name.lower():
+                dish_id = dish_ids.get(dish.get("nome", ""), None)
+                dish_data = dish.copy()
+                dish_data["id"] = dish_id
+                # Add restaurant-specific details
+                dish_data["ristorante"] = restaurant.get("nome", "")
+                dish_data["chef"] = restaurant.get("chef", "")
+                dish_data["pianeta"] = restaurant.get("pianeta", "")
+                # Convert ingredienti and tecniche to lists of names if they exist
+                if "ingredienti" in dish_data:
+                    dish_data["ingredienti"] = extract_names(dish_data["ingredienti"])
+                if "tecniche" in dish_data:
+                    dish_data["tecniche"] = extract_names(dish_data["tecniche"])
+                return dish_data
+
+    # If no exact match is found, perform fuzzy matching using difflib
+    # Build a list of tuples (dish, restaurant) for fuzzy matching
+    candidate_dishes = []
+    for restaurant in restaurants:
+        menu = restaurant.get("menu", [])
+        for dish in menu:
+            candidate_dishes.append((dish, restaurant))
+
+    # Create a list of candidate dish names
+    candidate_names = [dish.get("nome", "") for dish, _ in candidate_dishes]
+
+    # Use difflib.get_close_matches to find the closest match.
+    # The cutoff (0.8) can be adjusted for tolerance.
+    close_matches = difflib.get_close_matches(dish_name, candidate_names, n=1, cutoff=0.8)
+
+    if close_matches:
+        best_match = close_matches[0]
+        # Retrieve the corresponding dish details and restaurant data for the best match
+        for dish, restaurant in candidate_dishes:
+            if dish.get("nome", "") == best_match:
+                dish_id = dish_ids.get(best_match, None)
+                dish_data = dish.copy()
+                dish_data["id"] = dish_id
+                # Include restaurant-specific details
+                dish_data["ristorante"] = restaurant.get("nome", "")
+                dish_data["chef"] = restaurant.get("chef", "")
+                dish_data["pianeta"] = restaurant.get("pianeta", "")
+                # Convert ingredienti and tecniche to lists of names if they exist
+                if "ingredienti" in dish_data:
+                    dish_data["ingredienti"] = extract_names(dish_data["ingredienti"])
+                if "tecniche" in dish_data:
+                    dish_data["tecniche"] = extract_names(dish_data["tecniche"])
+                return dish_data
+
+    # If no match is found, return an empty dictionary
+    return {}
