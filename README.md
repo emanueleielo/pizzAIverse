@@ -3,6 +3,8 @@
 ## Overview
 This project was created for the Hackapizza hackathon. The challenge required building an AI assistant that helps intergalactic travelers navigate a rich multiverse of culinary delights. The system interprets natural language queries, handles complex dietary restrictions and preferences, and ensures that dish recommendations comply with galactic regulations.
 
+![Agent](agent.png)
+
 ## Project Description
 The assistant is capable of:
 - Parsing natural language queries to understand user preferences and restrictions.
